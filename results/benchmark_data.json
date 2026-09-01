@@ -1,0 +1,454 @@
+{
+  "workloads": {
+    "Tier 1: Lightweight CRUD (Min Bound)": {
+      "Baseline (Eager)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 4.61,
+        "p95_import_latency_ms": 6.37,
+        "avg_exec_latency_ms": 1.47,
+        "avg_total_response_ms": 6.08,
+        "p95_total_response_ms": 7.97,
+        "avg_memory_rss_mb": 21.46,
+        "prediction_accuracy_pct": 93.22,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static-Only (FaaSLight)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 2.87,
+        "p95_import_latency_ms": 4.12,
+        "avg_exec_latency_ms": 1.47,
+        "avg_total_response_ms": 4.34,
+        "p95_total_response_ms": 6.21,
+        "avg_memory_rss_mb": 21.96,
+        "prediction_accuracy_pct": 93.22,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static + Predictive (Ours)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 0.21,
+        "p95_import_latency_ms": 2.25,
+        "avg_exec_latency_ms": 1.47,
+        "avg_total_response_ms": 1.68,
+        "p95_total_response_ms": 3.54,
+        "avg_memory_rss_mb": 22.14,
+        "prediction_accuracy_pct": 93.22,
+        "cache_hit_rate_pct": 91.67
+      }
+    },
+    "Tier 2: Medium Enterprise (Paper Target)": {
+      "Baseline (Eager)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 46.47,
+        "p95_import_latency_ms": 51.07,
+        "avg_exec_latency_ms": 5.34,
+        "avg_total_response_ms": 51.81,
+        "p95_total_response_ms": 56.18,
+        "avg_memory_rss_mb": 22.21,
+        "prediction_accuracy_pct": 72.88,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static-Only (FaaSLight)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 26.17,
+        "p95_import_latency_ms": 28.8,
+        "avg_exec_latency_ms": 5.33,
+        "avg_total_response_ms": 31.51,
+        "p95_total_response_ms": 33.91,
+        "avg_memory_rss_mb": 22.32,
+        "prediction_accuracy_pct": 72.88,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static + Predictive (Ours)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 6.69,
+        "p95_import_latency_ms": 26.38,
+        "avg_exec_latency_ms": 5.35,
+        "avg_total_response_ms": 12.04,
+        "p95_total_response_ms": 31.49,
+        "avg_memory_rss_mb": 22.39,
+        "prediction_accuracy_pct": 72.88,
+        "cache_hit_rate_pct": 71.67
+      }
+    },
+    "Tier 3: Heavy Pipelines (Max Bound)": {
+      "Baseline (Eager)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 81.31,
+        "p95_import_latency_ms": 100.4,
+        "avg_exec_latency_ms": 8.23,
+        "avg_total_response_ms": 89.54,
+        "p95_total_response_ms": 110.52,
+        "avg_memory_rss_mb": 22.44,
+        "prediction_accuracy_pct": 62.71,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static-Only (FaaSLight)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 18.2,
+        "p95_import_latency_ms": 24.51,
+        "avg_exec_latency_ms": 71.42,
+        "avg_total_response_ms": 89.61,
+        "p95_total_response_ms": 111.42,
+        "avg_memory_rss_mb": 22.47,
+        "prediction_accuracy_pct": 62.71,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static + Predictive (Ours)": {
+        "invocations": 60,
+        "avg_import_latency_ms": 8.25,
+        "p95_import_latency_ms": 23.88,
+        "avg_exec_latency_ms": 35.5,
+        "avg_total_response_ms": 43.75,
+        "p95_total_response_ms": 110.37,
+        "avg_memory_rss_mb": 22.49,
+        "prediction_accuracy_pct": 62.71,
+        "cache_hit_rate_pct": 61.67
+      }
+    },
+    "Blended Portfolio (50/35/15 Fleet)": {
+      "Baseline (Eager)": {
+        "invocations": 80,
+        "avg_import_latency_ms": 36.15,
+        "p95_import_latency_ms": 99.34,
+        "avg_exec_latency_ms": 4.34,
+        "avg_total_response_ms": 40.49,
+        "p95_total_response_ms": 109.48,
+        "avg_memory_rss_mb": 22.52,
+        "prediction_accuracy_pct": 11.39,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static-Only (FaaSLight)": {
+        "invocations": 80,
+        "avg_import_latency_ms": 15.75,
+        "p95_import_latency_ms": 27.49,
+        "avg_exec_latency_ms": 15.34,
+        "avg_total_response_ms": 31.08,
+        "p95_total_response_ms": 109.06,
+        "avg_memory_rss_mb": 22.54,
+        "prediction_accuracy_pct": 11.39,
+        "cache_hit_rate_pct": 0.0
+      },
+      "Static + Predictive (Ours)": {
+        "invocations": 80,
+        "avg_import_latency_ms": 14.98,
+        "p95_import_latency_ms": 27.56,
+        "avg_exec_latency_ms": 15.29,
+        "avg_total_response_ms": 30.27,
+        "p95_total_response_ms": 108.62,
+        "avg_memory_rss_mb": 22.57,
+        "prediction_accuracy_pct": 11.39,
+        "cache_hit_rate_pct": 7.5
+      }
+    }
+  },
+  "reductions": {
+    "Tier 1: Lightweight CRUD (Min Bound)": {
+      "FaaSLight_vs_Baseline": {
+        "import_reduction_pct": 37.74,
+        "total_reduction_pct": 28.62
+      },
+      "Ours_vs_Baseline": {
+        "import_reduction_pct": 95.44,
+        "total_reduction_pct": 72.37
+      }
+    },
+    "Tier 2: Medium Enterprise (Paper Target)": {
+      "FaaSLight_vs_Baseline": {
+        "import_reduction_pct": 43.68,
+        "total_reduction_pct": 39.18
+      },
+      "Ours_vs_Baseline": {
+        "import_reduction_pct": 85.6,
+        "total_reduction_pct": 76.76
+      }
+    },
+    "Tier 3: Heavy Pipelines (Max Bound)": {
+      "FaaSLight_vs_Baseline": {
+        "import_reduction_pct": 77.62,
+        "total_reduction_pct": -0.08
+      },
+      "Ours_vs_Baseline": {
+        "import_reduction_pct": 89.85,
+        "total_reduction_pct": 51.14
+      }
+    },
+    "Blended Portfolio (50/35/15 Fleet)": {
+      "FaaSLight_vs_Baseline": {
+        "import_reduction_pct": 56.43,
+        "total_reduction_pct": 23.24
+      },
+      "Ours_vs_Baseline": {
+        "import_reduction_pct": 58.56,
+        "total_reduction_pct": 25.24
+      }
+    }
+  },
+  "endpoint_breakdown": {
+    "tier1_light.health_check": {
+      "tier": "tier1_light",
+      "short_name": "health_check",
+      "baseline": {
+        "import_ms": 2.0,
+        "exec_ms": 1.08,
+        "total_ms": 3.09
+      },
+      "faaslight": {
+        "import_ms": 0.81,
+        "exec_ms": 1.06,
+        "total_ms": 1.87,
+        "import_reduction_pct": 59.35,
+        "total_reduction_pct": 39.41
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 1.09,
+        "total_ms": 1.14,
+        "import_reduction_pct": 97.5,
+        "total_reduction_pct": 63.06,
+        "cache_hit": true
+      }
+    },
+    "tier1_light.user_profile": {
+      "tier": "tier1_light",
+      "short_name": "user_profile",
+      "baseline": {
+        "import_ms": 4.19,
+        "exec_ms": 2.06,
+        "total_ms": 6.26
+      },
+      "faaslight": {
+        "import_ms": 2.57,
+        "exec_ms": 2.1,
+        "total_ms": 4.66,
+        "import_reduction_pct": 38.84,
+        "total_reduction_pct": 25.5
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 2.09,
+        "total_ms": 2.14,
+        "import_reduction_pct": 98.81,
+        "total_reduction_pct": 65.77,
+        "cache_hit": true
+      }
+    },
+    "tier1_light.config_service": {
+      "tier": "tier1_light",
+      "short_name": "config_service",
+      "baseline": {
+        "import_ms": 3.67,
+        "exec_ms": 1.56,
+        "total_ms": 5.24
+      },
+      "faaslight": {
+        "import_ms": 1.88,
+        "exec_ms": 1.56,
+        "total_ms": 3.44,
+        "import_reduction_pct": 48.72,
+        "total_reduction_pct": 34.33
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 1.59,
+        "total_ms": 1.64,
+        "import_reduction_pct": 98.64,
+        "total_reduction_pct": 68.79,
+        "cache_hit": true
+      }
+    },
+    "tier1_light.item_counter": {
+      "tier": "tier1_light",
+      "short_name": "item_counter",
+      "baseline": {
+        "import_ms": 3.31,
+        "exec_ms": 1.07,
+        "total_ms": 4.38
+      },
+      "faaslight": {
+        "import_ms": 1.89,
+        "exec_ms": 1.09,
+        "total_ms": 2.97,
+        "import_reduction_pct": 43.07,
+        "total_reduction_pct": 32.18
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 1.12,
+        "total_ms": 1.17,
+        "import_reduction_pct": 98.49,
+        "total_reduction_pct": 73.42,
+        "cache_hit": true
+      }
+    },
+    "tier2_medium.order_manager": {
+      "tier": "tier2_medium",
+      "short_name": "order_manager",
+      "baseline": {
+        "import_ms": 46.11,
+        "exec_ms": 5.09,
+        "total_ms": 51.2
+      },
+      "faaslight": {
+        "import_ms": 26.57,
+        "exec_ms": 5.12,
+        "total_ms": 31.68,
+        "import_reduction_pct": 42.39,
+        "total_reduction_pct": 38.12
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 5.13,
+        "total_ms": 5.18,
+        "import_reduction_pct": 99.89,
+        "total_reduction_pct": 89.87,
+        "cache_hit": true
+      }
+    },
+    "tier2_medium.user_settings_api": {
+      "tier": "tier2_medium",
+      "short_name": "user_settings_api",
+      "baseline": {
+        "import_ms": 38.07,
+        "exec_ms": 6.12,
+        "total_ms": 44.19
+      },
+      "faaslight": {
+        "import_ms": 22.55,
+        "exec_ms": 6.28,
+        "total_ms": 28.83,
+        "import_reduction_pct": 40.78,
+        "total_reduction_pct": 34.77
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 6.12,
+        "total_ms": 6.17,
+        "import_reduction_pct": 99.87,
+        "total_reduction_pct": 86.03,
+        "cache_hit": true
+      }
+    },
+    "tier2_medium.inventory_checker": {
+      "tier": "tier2_medium",
+      "short_name": "inventory_checker",
+      "baseline": {
+        "import_ms": 43.54,
+        "exec_ms": 5.08,
+        "total_ms": 48.62
+      },
+      "faaslight": {
+        "import_ms": 25.73,
+        "exec_ms": 5.11,
+        "total_ms": 30.83,
+        "import_reduction_pct": 40.92,
+        "total_reduction_pct": 36.58
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 5.1,
+        "total_ms": 5.15,
+        "import_reduction_pct": 99.89,
+        "total_reduction_pct": 89.4,
+        "cache_hit": true
+      }
+    },
+    "tier3_heavy.fraud_evaluator": {
+      "tier": "tier3_heavy",
+      "short_name": "fraud_evaluator",
+      "baseline": {
+        "import_ms": 85.43,
+        "exec_ms": 7.12,
+        "total_ms": 92.55
+      },
+      "faaslight": {
+        "import_ms": 21.28,
+        "exec_ms": 73.59,
+        "total_ms": 94.87,
+        "import_reduction_pct": 75.09,
+        "total_reduction_pct": -2.51
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 7.12,
+        "total_ms": 7.17,
+        "import_reduction_pct": 99.94,
+        "total_reduction_pct": 92.25,
+        "cache_hit": true
+      }
+    },
+    "tier3_heavy.document_ocr_pipeline": {
+      "tier": "tier3_heavy",
+      "short_name": "document_ocr_pipeline",
+      "baseline": {
+        "import_ms": 98.39,
+        "exec_ms": 10.12,
+        "total_ms": 108.5
+      },
+      "faaslight": {
+        "import_ms": 22.96,
+        "exec_ms": 86.54,
+        "total_ms": 109.5,
+        "import_reduction_pct": 76.66,
+        "total_reduction_pct": -0.92
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 10.1,
+        "total_ms": 10.15,
+        "import_reduction_pct": 99.95,
+        "total_reduction_pct": 90.65,
+        "cache_hit": true
+      }
+    },
+    "tier3_heavy.media_transcoder": {
+      "tier": "tier3_heavy",
+      "short_name": "media_transcoder",
+      "baseline": {
+        "import_ms": 62.27,
+        "exec_ms": 8.12,
+        "total_ms": 70.39
+      },
+      "faaslight": {
+        "import_ms": 11.52,
+        "exec_ms": 59.94,
+        "total_ms": 71.46,
+        "import_reduction_pct": 81.5,
+        "total_reduction_pct": -1.52
+      },
+      "predictive": {
+        "import_ms": 0.05,
+        "exec_ms": 8.12,
+        "total_ms": 8.17,
+        "import_reduction_pct": 99.92,
+        "total_reduction_pct": 88.39,
+        "cache_hit": true
+      }
+    }
+  },
+  "spectrum_bounds": {
+    "tier1_min_bound": {
+      "import_reduction_pct": 37.74,
+      "total_reduction_pct": 28.62
+    },
+    "tier2_median_bound": {
+      "import_reduction_pct": 43.68,
+      "total_reduction_pct": 39.18
+    },
+    "tier3_max_bound": {
+      "import_reduction_pct": 77.62,
+      "total_reduction_pct": -0.08
+    },
+    "blended_fleet_average": {
+      "import_reduction_pct": 56.43,
+      "total_reduction_pct": 23.24
+    },
+    "blended_predictive_average": {
+      "import_reduction_pct": 58.56,
+      "total_reduction_pct": 25.24
+    },
+    "reported_paper_targets": {
+      "import_reduction_pct": 28.8,
+      "total_reduction_pct": 19.2
+    }
+  }
+}
