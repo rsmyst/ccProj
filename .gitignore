@@ -1,0 +1,23 @@
+# Local environments and dependency shims
+.venv/
+venv/
+env/
+.local_lib/
+
+# Python-generated files
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+
+# Test, coverage, and tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Build and local output
+build/
+dist/
+*.log
