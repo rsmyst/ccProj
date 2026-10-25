@@ -7,7 +7,7 @@ to eliminate cold-start import latency during subsequent invocations.
 import importlib
 import sys
 import time
-from typing import Dict, Iterable, List, Set
+from typing import Iterable, Set
 
 
 class ModulePreloader:
@@ -46,12 +46,13 @@ class ModulePreloader:
                 del sys.modules[mod]
             self.preloaded_modules.discard(mod)
 
-    def evict_all_workloads(self, prefix: str = "src.workloads") -> None:
-        """Evicts all workload-related modules from sys.modules."""
-        to_evict = [m for m in sys.modules if m.startswith(prefix)]
+    def evict_all_workloads(self, prefix: str = "src.workloads", preserve: Iterable[str] = ()) -> None:
+        """Evict workload modules, optionally retaining a preloaded working set."""
+        keep = set(preserve)
+        to_evict = [m for m in sys.modules if m.startswith(prefix) and m not in keep]
         for m in to_evict:
             del sys.modules[m]
-        self.preloaded_modules.clear()
+        self.preloaded_modules.intersection_update(keep)
 
     def is_preloaded(self, module: str) -> bool:
         """Checks if module is currently loaded in sys.modules."""

@@ -9,10 +9,14 @@ and a Blended Enterprise Portfolio:
 - Blended Portfolio: Realistic 50/35/15 Fleet Distribution
 
 Outputs JSON benchmark metrics and empirical savings bounds.
+
+The three compared versions are deliberately explicit:
+  Baseline: eager import of the full static dependency set
+  V1:      AST-guided import of indispensable dependencies only
+  V2:      V1 plus transition prediction and a persistent preloaded working set
 """
 
 import json
-import os
 import random
 import sys
 from pathlib import Path
@@ -108,6 +112,7 @@ def run_workload(runtime: ServerlessRuntimeSimulator, sequence: List[str]) -> di
     latencies_total = []
     memories = []
     hits = 0
+    preload_times = []
 
     for ep in sequence:
         metrics = runtime.invoke(ep, force_cold=True)
@@ -117,9 +122,15 @@ def run_workload(runtime: ServerlessRuntimeSimulator, sequence: List[str]) -> di
         memories.append(metrics.memory_rss_mb)
         if metrics.cache_hit:
             hits += 1
+        preload_times.append(metrics.preload_latency_ms)
 
     def avg(lst): return sum(lst) / len(lst) if lst else 0.0
-    def p95(lst): return sorted(lst)[int(len(lst) * 0.95)] if lst else 0.0
+    def p95(lst):
+        if not lst:
+            return 0.0
+        ordered = sorted(lst)
+        index = min(len(ordered) - 1, max(0, int(round(0.95 * (len(ordered) - 1)))))
+        return ordered[index]
 
     return {
         "invocations": len(sequence),
@@ -129,6 +140,7 @@ def run_workload(runtime: ServerlessRuntimeSimulator, sequence: List[str]) -> di
         "avg_total_response_ms": round(avg(latencies_total), 2),
         "p95_total_response_ms": round(p95(latencies_total), 2),
         "avg_memory_rss_mb": round(avg(memories), 2),
+        "avg_background_preload_ms": round(avg(preload_times), 2),
         "prediction_accuracy_pct": round(runtime.predictor.accuracy, 2) if hasattr(runtime.predictor, "accuracy") else 0.0,
         "cache_hit_rate_pct": round((hits / len(sequence)) * 100.0, 2) if sequence else 0.0
     }
@@ -152,16 +164,16 @@ def compute_reductions(baseline: dict, target: dict) -> dict:
 
 def main():
     workloads = {
-        "Tier 1: Lightweight CRUD (Min Bound)": generate_tier1_workload(length=60),
-        "Tier 2: Medium Enterprise (Paper Target)": generate_tier2_workload(length=60),
-        "Tier 3: Heavy Pipelines (Max Bound)": generate_tier3_workload(length=60),
-        "Blended Portfolio (50/35/15 Fleet)": generate_blended_portfolio_workload(length=80),
+        "Tier 1: Lightweight CRUD": generate_tier1_workload(length=24),
+        "Tier 2: Medium Enterprise": generate_tier2_workload(length=24),
+        "Tier 3: Heavy Pipelines": generate_tier3_workload(length=24),
+        "Blended Portfolio (50/35/15 Fleet)": generate_blended_portfolio_workload(length=32),
     }
 
     modes = {
         "Baseline (Eager)": ExecutionMode.BASELINE,
-        "Static-Only (FaaSLight)": ExecutionMode.STATIC_ONLY,
-        "Static + Predictive (Ours)": ExecutionMode.STATIC_PREDICTIVE,
+        "V1 (Static / FaaSLight)": ExecutionMode.STATIC_ONLY,
+        "V2 (Predictive Preload)": ExecutionMode.STATIC_PREDICTIVE,
     }
 
     all_results = {}
@@ -190,15 +202,16 @@ def main():
 
         # Compute Reductions vs Baseline
         base_res = all_results[w_name]["Baseline (Eager)"]
-        faas_res = all_results[w_name]["Static-Only (FaaSLight)"]
-        ours_res = all_results[w_name]["Static + Predictive (Ours)"]
+        faas_res = all_results[w_name]["V1 (Static / FaaSLight)"]
+        ours_res = all_results[w_name]["V2 (Predictive Preload)"]
 
         faas_reduc = compute_reductions(base_res, faas_res)
         ours_reduc = compute_reductions(base_res, ours_res)
 
         reduction_summary[w_name] = {
-            "FaaSLight_vs_Baseline": faas_reduc,
-            "Ours_vs_Baseline": ours_reduc
+            "V1_vs_Baseline": faas_reduc,
+            "V2_vs_Baseline": ours_reduc,
+            "V2_vs_V1": compute_reductions(faas_res, ours_res)
         }
 
         print("-" * 96)
@@ -281,11 +294,11 @@ def main():
     print("     EMPIRICAL PERFORMANCE BOUNDS SPECTRUM (FaaSLight vs Baseline)")
     print("=" * 96)
 
-    t1_red = reduction_summary["Tier 1: Lightweight CRUD (Min Bound)"]["FaaSLight_vs_Baseline"]
-    t2_red = reduction_summary["Tier 2: Medium Enterprise (Paper Target)"]["FaaSLight_vs_Baseline"]
-    t3_red = reduction_summary["Tier 3: Heavy Pipelines (Max Bound)"]["FaaSLight_vs_Baseline"]
-    blend_red = reduction_summary["Blended Portfolio (50/35/15 Fleet)"]["FaaSLight_vs_Baseline"]
-    blend_ours = reduction_summary["Blended Portfolio (50/35/15 Fleet)"]["Ours_vs_Baseline"]
+    t1_red = reduction_summary["Tier 1: Lightweight CRUD"]["V1_vs_Baseline"]
+    t2_red = reduction_summary["Tier 2: Medium Enterprise"]["V1_vs_Baseline"]
+    t3_red = reduction_summary["Tier 3: Heavy Pipelines"]["V1_vs_Baseline"]
+    blend_red = reduction_summary["Blended Portfolio (50/35/15 Fleet)"]["V1_vs_Baseline"]
+    blend_ours = reduction_summary["Blended Portfolio (50/35/15 Fleet)"]["V2_vs_Baseline"]
 
     print(f"{'Workload Profile':<38} | {'Code Loading Reduction':<24} | {'Total Latency Reduction':<24}")
     print("-" * 96)
@@ -315,6 +328,16 @@ def main():
             "reported_paper_targets": {
                 "import_reduction_pct": 28.8,
                 "total_reduction_pct": 19.2
+            }
+        },
+        "benchmark_protocol": {
+            "repeatable_sequence_lengths": {"tiered": 24, "blended": 32},
+            "cold_start_policy": "Each invocation is isolated; V2 may retain only its explicitly preloaded working set.",
+            "background_preload_excluded_from_response": True,
+            "versions": {
+                "baseline": "Eagerly import indispensable and optional dependencies.",
+                "v1": "Import indispensable dependencies; optional imports remain handler-lazy.",
+                "v2": "V1 plus online Markov next-hop prediction and persistent preloaded modules."
             }
         }
     }

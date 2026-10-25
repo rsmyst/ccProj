@@ -1,0 +1,11 @@
+sequenceDiagram
+    participant R as Runtime
+    participant P as Predictor
+    participant C as Preload cache
+    participant N as Next endpoint
+    R->>P: record(current, next)
+    P-->>R: top-1 prediction
+    R->>C: warm predicted module closure
+    Note over C: background work
+    R->>N: next invocation
+    C-->>N: module already resident

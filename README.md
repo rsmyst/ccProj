@@ -1,54 +1,36 @@
 # Predictive Serverless Cold-Start Optimizer
 
-> **Milestone 1: Static Dependency Analyzer (Objective 1)**  
-> An AST-based dependency analyzer for serverless functions inspired by **FaaSLight**.
+This project measures three versions of a Python serverless runtime:
 
----
+- **Baseline**: eagerly imports the full static dependency set.
+- **V1**: uses AST analysis to import only indispensable dependencies at startup.
+- **V2**: adds online Markov next-hop prediction and preloads the predicted module closure.
 
-## 🎯 Project Roadmap & Status
+The benchmark uses light, medium, heavy, and blended workloads from `src/workloads`. The latest reproducible run is stored in [`results/benchmark_data.json`](results/benchmark_data.json), with figures in [`results/`](results/).
 
-| Milestone | Objective | Description | Status |
-| :--- | :--- | :--- | :---: |
-| **Milestone 1** | **Objective 1: Static Dependency Analyzer** | AST-based code analysis classifying dependencies into indispensable (eager) vs. optional (deferred/lazy). | **COMPLETED & RUNNABLE** |
-| **Milestone 2** | **Objective 2: Runtime Transition Predictor** | Frequency-based Markov matrix predicting subsequent function transitions ($A \to B \to C$). | *Not Implemented* |
-| **Milestone 3** | **Objective 3: Preloader & Benchmark Harness** | Module preloader and cold-start benchmark comparing baseline vs. static vs. predictive preloading. | *Not Implemented* |
+## Run
 
----
-
-## 🚀 How to Run Milestone 1
-
-### 1. Analyze a Directory of Functions
-Scan all serverless functions in a directory (defaults to `src/workloads`):
 ```bash
 python main.py --dir src/workloads
-```
-
-### 2. View the Dependency Call Graph
-Generate an ASCII dependency tree showing indispensable vs. optional dependencies:
-```bash
 python main.py --dir src/workloads --graph
-```
-
-### 3. Detailed File Inspection
-Analyze an individual function file line-by-line:
-```bash
-python main.py --file src/workloads/core_api.py
-python main.py --file src/workloads/feature_recommendation.py
-```
-
-### 4. Export JSON Output
-```bash
-python main.py --file src/workloads/core_api.py --json
-python main.py --dir src/workloads --json
-```
-
-### 5. Check Unimplemented Modules
-```bash
 python main.py --predict
 python main.py --benchmark
+python bench/plot_results.py
+python -m pytest -q
 ```
 
-### 6. Run Unit Tests
+The benchmark uses fixed seeds, 24 invocations per tier, 32 blended invocations, and reports import latency, handler latency, total response latency, p95, memory, and predictive cache hits. Background preload time is recorded separately from request latency.
+
+## Documents
+
+- [`report.pdf`](report.pdf) — compiled technical report
+- [`presentation.pdf`](presentation.pdf) — compiled presentation
+- [`report.tex`](report.tex) and [`presentation.tex`](presentation.tex) — source files
+- [`diagrams/`](diagrams/) — Mermaid source and rendered runtime diagrams
+
+Compile the documents with:
+
 ```bash
-python -m pytest tests/test_analyzer.py -v
+tectonic report.tex
+tectonic presentation.tex
 ```

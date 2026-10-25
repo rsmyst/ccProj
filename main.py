@@ -2,7 +2,7 @@
 """
 Predictive Serverless Cold-Start Optimizer — CLI Entrypoint
 
-Milestone 1: Objective 1 (Static Dependency Analyzer)
+Static dependency analyzer, predictive runtime, and benchmark suite
 Usage:
     python main.py --file src/workloads/core_api.py
     python main.py --dir src/workloads/
@@ -20,7 +20,7 @@ from src.analyzer import StaticDependencyAnalyzer
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description="Predictive Serverless Cold-Start Optimizer (Milestone 1: Static Analyzer)"
+        description="Predictive Serverless Cold-Start Optimizer"
     )
 
     group = parser.add_mutually_exclusive_group(required=False)
@@ -49,12 +49,12 @@ def parse_args():
     parser.add_argument(
         "--predict",
         action="store_true",
-        help="Run runtime transition predictor (Objective 2 - Milestone 2)"
+        help="Run a transition predictor demonstration"
     )
     parser.add_argument(
         "--benchmark",
         action="store_true",
-        help="Run cold-start preloader benchmark (Objective 3 - Milestone 3)"
+        help="Run the reproducible Baseline/V1/V2 benchmark"
     )
 
     return parser.parse_args()

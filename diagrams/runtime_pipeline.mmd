@@ -1,0 +1,18 @@
+flowchart LR
+    A[Request] --> B[AST manifest]
+    B --> C{Version}
+    C --> D[Baseline\nload all imports]
+    C --> E[V1\nload indispensable imports]
+    C --> F[V2\npredict next endpoint]
+    F --> G[Preload dependency closure]
+    G --> H[Next request cache hit]
+    D --> I[Handler]
+    E --> I
+    H --> I
+
+    classDef base fill:#6B7280,color:#fff,stroke:#6B7280;
+    classDef v1 fill:#F97316,color:#fff,stroke:#F97316;
+    classDef v2 fill:#22C55E,color:#12351D,stroke:#22C55E;
+    class D base;
+    class E v1;
+    class F,G,H v2;

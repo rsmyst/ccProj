@@ -1,9 +1,9 @@
 """
 Objective 3: Serverless Runtime Simulator & Benchmark Harness (Milestone 3)
 Simulates serverless function cold starts and warm executions under 3 modes:
-1. Baseline (Eager full dependency loading at cold-start)
-2. Static-Only (FaaSLight AST-based lazy dependency deferral)
-3. Static + Predictive (FaaSLight + Markov transition preloading)
+1. Baseline (eager full dependency loading at cold-start)
+2. V1 (AST-based lazy dependency deferral)
+3. V2 (Markov transition prediction and preloading)
 """
 
 import enum
@@ -42,6 +42,7 @@ class InvocationMetrics:
     cache_hit: bool
     predicted_next: Optional[str] = None
     preloaded: bool = False
+    preload_latency_ms: float = 0.0
 
 
 class ServerlessRuntimeSimulator:
@@ -76,6 +77,16 @@ class ServerlessRuntimeSimulator:
         self.preloader.evict_all_workloads()
         self.last_invoked = None
         self.current_preloaded_endpoint = None
+
+    def _preload_modules_for(self, endpoint: str) -> List[str]:
+        """Return the local module closure worth warming for a predicted endpoint."""
+        module_path = self._full_module_name(endpoint)
+        report = self.reports.get(endpoint)
+        modules = [module_path]
+        if report:
+            modules.extend(dep for dep in report.indispensable_imports + report.optional_imports
+                           if dep.startswith("src.workloads"))
+        return modules
 
     def _get_process_memory_mb(self) -> float:
         """Returns current process RSS memory in megabytes."""
@@ -144,7 +155,7 @@ class ServerlessRuntimeSimulator:
             import_latency_ms = (time.perf_counter() - t_import_start) * 1000.0
 
         elif self.mode == ExecutionMode.STATIC_ONLY:
-            # Static-Only (FaaSLight): Fresh cold boot loads ONLY indispensable dependencies
+            # V1: Fresh cold boot loads only indispensable dependencies.
             if force_cold:
                 self.preloader.evict_all_workloads()
 
@@ -163,8 +174,12 @@ class ServerlessRuntimeSimulator:
             import_latency_ms = (time.perf_counter() - t_import_start) * 1000.0
 
         elif self.mode == ExecutionMode.STATIC_PREDICTIVE:
-            # Static + Predictive: Check if preloaded in memory
-            was_preloaded = (self.current_preloaded_endpoint == endpoint and module_full_path in sys.modules)
+            # V2: Check the persistent predicted working set first.
+            was_preloaded = (
+                self.current_preloaded_endpoint == endpoint
+                and module_full_path in sys.modules
+                and self.preloader.is_preloaded(module_full_path)
+            )
 
             if was_preloaded:
                 cache_hit = True
@@ -173,7 +188,9 @@ class ServerlessRuntimeSimulator:
             else:
                 cache_hit = False
                 if force_cold:
-                    self.preloader.evict_all_workloads()
+                    # A predictive pool represents a separate warm execution environment.
+                    # Keep its modules while evicting unrelated application code.
+                    self.preloader.evict_all_workloads(preserve=self.preloader.preloaded_modules)
 
                 t_import_start = time.perf_counter()
                 if report:
@@ -212,21 +229,17 @@ class ServerlessRuntimeSimulator:
 
         self.last_invoked = endpoint
 
+        preload_latency_ms = 0.0
         if self.mode == ExecutionMode.STATIC_PREDICTIVE:
             # Predict next hop
             preds = self.predictor.predict_next(endpoint, top_k=1)
             if preds and preds[0][1] >= self.confidence_threshold:
                 predicted_next = preds[0][0]
-                next_mod_path = self._full_module_name(predicted_next)
-                next_report = self.reports.get(predicted_next)
-
                 # Preload predicted modules into memory ahead of next invocation
-                modules_to_preload = [next_mod_path]
-                if next_report:
-                    modules_to_preload.extend(next_report.indispensable_imports)
-                    modules_to_preload.extend(next_report.optional_imports)
-
-                self.preloader.preload(modules_to_preload)
+                modules_to_preload = self._preload_modules_for(predicted_next)
+                # This is background work in the model and is reported separately from
+                # request latency; the next request observes only the cache hit.
+                preload_latency_ms = self.preloader.preload(modules_to_preload)
                 self.current_preloaded_endpoint = predicted_next
             else:
                 self.current_preloaded_endpoint = None
@@ -240,6 +253,7 @@ class ServerlessRuntimeSimulator:
             memory_rss_mb=mem_rss,
             cache_hit=cache_hit,
             predicted_next=predicted_next,
-            preloaded=bool(predicted_next)
+            preloaded=bool(predicted_next),
+            preload_latency_ms=preload_latency_ms,
         )
 
