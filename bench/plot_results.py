@@ -95,6 +95,54 @@ def save_tradeoff_chart(result_dir: Path, workloads: list[str], data: dict) -> N
     plt.close(fig)
 
 
+def save_cache_hit_chart(result_dir: Path, workloads: list[str], data: dict) -> None:
+    labels = ["Tier 1", "Tier 2", "Tier 3", "Fleet"]
+    values = [data["workloads"][workload]["V2 (Predictive Preload)"]["cache_hit_rate_pct"] for workload in workloads]
+    fig, axis = plt.subplots(figsize=(8.5, 4.2), constrained_layout=True)
+    bars = axis.bar(labels, values, color=PALETTE["V2 (Predictive Preload)"], width=0.55)
+    for bar, value in zip(bars, values):
+        axis.text(bar.get_x() + bar.get_width() / 2, value + 2, f"{value:.1f}%",
+                  ha="center", va="bottom", fontweight="bold")
+    axis.set_title("PCSO predictive cache-hit rate", loc="left", fontweight="bold")
+    axis.set_ylabel("cache hits (%)")
+    axis.set_ylim(0, 100)
+    style_axes(axis)
+    fig.savefig(result_dir / "cache_hit_rate.png", dpi=220, bbox_inches="tight")
+    plt.close(fig)
+
+
+def save_memory_cache_chart(result_dir: Path, workloads: list[str], data: dict) -> None:
+    labels = ["Tier 1", "Tier 2", "Tier 3", "Fleet"]
+    x = np.arange(len(workloads))
+    fig, axes = plt.subplots(1, 2, figsize=(10.5, 3.7), constrained_layout=True)
+    labels_by_mode = {
+        "Baseline (Eager)": "Baseline",
+        "V1 (Static / FaaSLight)": "V1 (FaaSLight)",
+        "V2 (Predictive Preload)": "PCSO",
+    }
+    for mode in ["Baseline (Eager)", "V1 (Static / FaaSLight)", "V2 (Predictive Preload)"]:
+        values = [data["workloads"][workload][mode]["avg_memory_rss_mb"] for workload in workloads]
+        axes[0].plot(x, values, marker="o", linewidth=2.0, label=labels_by_mode[mode], color=PALETTE[mode])
+    axes[0].set_title("Resident memory", loc="left", fontweight="bold")
+    axes[0].set_ylabel("average RSS (MB)")
+    axes[0].set_xticks(x, labels)
+    style_axes(axes[0])
+    axes[0].legend(frameon=False, fontsize=7, loc="lower right")
+
+    hit_values = [data["workloads"][workload]["V2 (Predictive Preload)"]["cache_hit_rate_pct"] for workload in workloads]
+    bars = axes[1].bar(labels, hit_values, color=PALETTE["V2 (Predictive Preload)"], width=0.55)
+    for bar, value in zip(bars, hit_values):
+        axes[1].text(bar.get_x() + bar.get_width() / 2, value + 2, f"{value:.1f}%",
+                     ha="center", va="bottom", fontsize=8, fontweight="bold")
+    axes[1].set_title("PCSO cache hits", loc="left", fontweight="bold")
+    axes[1].set_ylabel("cache hits (%)")
+    axes[1].set_ylim(0, 100)
+    style_axes(axes[1])
+    fig.suptitle("Memory overhead and predictive cache effectiveness", x=0.02, ha="left", fontweight="bold")
+    fig.savefig(result_dir / "memory_and_cache.png", dpi=220, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main() -> None:
     result_dir, data = load_data()
     workloads = list(data["workloads"])
@@ -102,6 +150,8 @@ def main() -> None:
     save_latency_chart(result_dir, workloads, data)
     save_reduction_chart(result_dir, workloads, data)
     save_tradeoff_chart(result_dir, workloads, data)
+    save_cache_hit_chart(result_dir, workloads, data)
+    save_memory_cache_chart(result_dir, workloads, data)
     print(f"Rendered benchmark figures in {result_dir}")
 
 

@@ -1,40 +1,59 @@
-\documentclass[10pt,conference]{IEEEtran}
+\documentclass[12pt]{report}
 
+% NITK major-project template structure and page geometry
+\usepackage[a4paper,top=1.5in,bottom=1in,left=1.5in,right=1in]{geometry}
 \usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
 \usepackage{lmodern}
 \usepackage{microtype}
 \usepackage{amsmath,amssymb}
-\usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{booktabs}
 \usepackage{tabularx}
 \usepackage{array}
-\usepackage{xcolor}
-\usepackage{cite}
-\usepackage{url}
-\usepackage{balance}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{framed}
+\usepackage{enumitem}
+\usepackage{ragged2e}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{chngcntr}
 \usepackage{hyperref}
+\usepackage{url}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
 
+\graphicspath{{./}{diagrams/}{results/}}
 \definecolor{navy}{RGB}{27,54,93}
 \definecolor{teal}{RGB}{0,128,128}
-\hypersetup{colorlinks=true,linkcolor=navy,citecolor=teal,urlcolor=teal,
+\hypersetup{colorlinks=true,linkcolor=black,citecolor=teal,urlcolor=teal,
     pdftitle={Predictive Serverless Cold-Start Optimizer},
     pdfauthor={Rahul Saravanan and Shishir Hegde}}
 
-\newcommand{\widefig}[2]{%
-\begin{figure*}[!t]
+\renewcommand{\baselinestretch}{1.3}
+\setlength{\parindent}{1.2cm}
+\setlength{\parskip}{0.25em}
+\setlist{itemsep=3pt,topsep=4pt}
+\titleformat{\chapter}[display]
+    {\normalfont\huge\bfseries\centering}{\chaptertitlename\ \thechapter}{10pt}{\Huge\centering}
+\titlespacing*{\chapter}{0pt}{-35pt}{18pt}
+\captionsetup{font=small,labelfont=bf,skip=6pt}
+\counterwithin{figure}{chapter}
+\counterwithin{table}{chapter}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Predictive Serverless Cold-Start Optimizer}
+\fancyhead[R]{\small IT418 Cloud Computing}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\fullfigure}[3][0.95\textwidth]{%
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.96\textwidth]{#1}
-    \caption{#2}
-    \label{fig:#1}
-\end{figure*}}
-\newcommand{\singlefig}[2]{%
-\begin{figure}[!t]
-    \centering
-    \includegraphics[width=\columnwidth]{#1}
-    \caption{#2}
-    \label{fig:#1}
+    \includegraphics[width=#1]{#2}
+    \caption{#3}
 \end{figure}}
-\raggedbottom
 
 \begin{document}
 
@@ -42,9 +61,10 @@
 % Title page
 % -------------------------------------------------------------------
 \begin{titlepage}
+    \newgeometry{top=0.55in,bottom=0.55in,left=1in,right=1in}
     \thispagestyle{empty}
     \centering
-    \vspace*{0.25cm}
+    \vspace*{0.05cm}
 
     {\Large IT418 Cloud Computing Project Report on \\[0.6em]}
     {\Huge\bfseries Predictive Serverless Cold-Start Optimizer \\[1em]}
@@ -62,14 +82,13 @@
         Rahul Saravanan (231IT054) \\[0.6em]
         Shishir Hegde (231IT067)
     \end{tabular}
-    } \\[1cm]
+    } \\[0.45cm]
 
-    % Add NITK_Emblem.png beside report.tex. The fallback keeps the file compilable meanwhile.
     \IfFileExists{NITK_Emblem.png}{%
-        \includegraphics[width=7cm]{NITK_Emblem.png}%
+        \includegraphics[width=5.8cm]{NITK_Emblem.png}%
     }{%
-        \fbox{\parbox[c][2.7cm][c]{7cm}{\centering\small NITK Emblem}}%
-    } \\[0.6cm]
+        \fbox{\parbox[c][2.2cm][c]{5.8cm}{\centering\small NITK Emblem}}%
+    } \\[0.35cm]
 
     {\large\bfseries Department of Information Technology \\[0.2em]
     National Institute of Technology Karnataka, Surathkal \\[0.2em]
@@ -77,57 +96,179 @@
 
     \vfill
     {\normalsize October, 2026}
+    \restoregeometry
 \end{titlepage}
 
-\twocolumn[
-\begin{@twocolumnfalse}
-\begin{abstract}
-Serverless applications often spend a substantial part of their first-request latency loading dependencies. This paper presents the Predictive Cold-Start Optimizer (PCSO), an application-level approach that combines static dependency analysis with runtime transition prediction. The static phase separates startup-critical imports from request-specific imports. The runtime phase learns likely endpoint transitions and preloads the predicted dependency closure before the next request arrives. Against an eager no-optimizer baseline, the evaluated system reduces blended code-loading latency from 31.36 ms to 4.77 ms and total response latency from 35.29 ms to 15.48 ms. These correspond to reductions of 84.8\% and 56.1\%, respectively. The study also compares the static-only FaaSLight-style stage, which provides a useful minimum-improvement reference but can shift heavy import cost into handler execution.
-\end{abstract}
-\vspace{0.25em}
-\textbf{Index Terms--} serverless computing, cold start, dependency analysis, lazy loading, transition prediction, preloading.
-\vspace{0.8em}
-\end{@twocolumnfalse}
-]
+\clearpage
+\thispagestyle{empty}
+\begin{framed}
+\begin{center}\textbf{\Large DECLARATION}\end{center}
+\justifying
+We hereby declare that the IT418 Cloud Computing project report entitled \textit{Predictive Serverless Cold-Start Optimizer}, submitted to the National Institute of Technology Karnataka, Surathkal, is a bona fide record of the work carried out by us. The material contained in this report has not been submitted to any other university or institution for the award of any degree.
 
-\section{Introduction}
-Function-as-a-Service platforms create execution environments on demand. A newly created environment must initialize application code before it can serve its first request. The initialization cost is especially visible in services that include database clients, SDKs, model wrappers, or media-processing libraries. Loading every dependency eagerly is simple, but it makes optional functionality part of the critical path.
+\vspace{1em}
+\begin{enumerate}[label={(\arabic*)}]
+\item Rahul Saravanan (231IT054)
+\item Shishir Hegde (231IT067)
+\end{enumerate}
 
-This work evaluates a progression from an eager baseline to a final Predictive Cold-Start Optimizer (PCSO). The comparison has three points: the true no-optimizer baseline, a static-only V1 stage inspired by FaaSLight~\cite{faaslight}, and PCSO. The purpose of retaining V1 is not to present it as the final system, but to show the minimum improvement obtained from static deferral before prediction and preloading are added.
+Department of Information Technology\\
+Place: NITK, Surathkal -- 575025\\
+Date: October, 2026
+\vfill
+\hfill Signatures of the students
+\end{framed}
 
-The contributions are:
-\begin{itemize}
-    \item an AST-based dependency classification method for identifying startup-critical and deferrable imports;
-    \item an online first-order transition model for predicting the next endpoint;
-    \item a preloading policy that warms the predicted dependency closure before the next request; and
-    \item a three-way evaluation across light, medium, heavy, and blended workload profiles.
-\end{itemize}
+\clearpage
+\thispagestyle{empty}
+\begin{framed}
+\begin{center}\textbf{\Large CERTIFICATE}\end{center}
+\justifying
+This is to certify that the IT418 Cloud Computing project report entitled \textit{Predictive Serverless Cold-Start Optimizer}, submitted by Rahul Saravanan (231IT054) and Shishir Hegde (231IT067), is accepted as a B.Tech. project report in partial fulfillment of the requirements for the award of the degree of Bachelor of Technology in Information Technology.
 
-\section{System Design}
-\subsection{Static dependency analysis}
-The analyzer inspects the source structure of each function. Imports at module scope are classified as indispensable because they are needed to construct the handler environment. Imports inside functions or conditional branches are classified as optional candidates for deferral. This classification is conservative: it changes when a dependency is loaded, not what the handler computes.
+\vfill
+\begin{center}
+\textbf{Bhawana Rudra}\\
+Designation: Assistant Professor\\
+Department of Information Technology, NITK Surathkal
 
-\subsection{Runtime transition prediction}
-PCSO maintains a first-order Markov transition table. For an observed transition from endpoint $A$ to endpoint $B$, it increments $N(A,B)$. The probability of the next endpoint is estimated as
+\vspace{2cm}
+\textbf{Chairman -- DUGC}\\
+Signature with date and seal
+\end{center}
+\end{framed}
+
+\clearpage
+\thispagestyle{empty}
+\begin{center}\textbf{\Large ACKNOWLEDGEMENT}\end{center}
+\justifying
+We express our sincere gratitude to the Department of Information Technology, National Institute of Technology Karnataka, Surathkal, for providing the academic environment and facilities required for this work. We thank our guide, Bhawana Rudra, for her guidance and feedback throughout the project. We also acknowledge the support of the faculty and staff who helped us refine the evaluation and presentation of the work.
+
+\vfill
+\begin{flushright}
+Rahul Saravanan\\
+Shishir Hegde
+\end{flushright}
+
+\clearpage
+\pagenumbering{roman}
+\begin{center}\textbf{\Large ABSTRACT}\end{center}
+\justifying
+Serverless applications often spend a substantial part of their first-request latency loading dependencies. This project presents the Predictive Cold-Start Optimizer (PCSO), an application-level approach that combines static dependency analysis with runtime transition prediction. The static phase separates startup-critical imports from request-specific imports. The runtime phase learns likely endpoint transitions and preloads the predicted dependency closure before the next request arrives. Against an eager no-optimizer baseline, the evaluated system reduces blended code-loading latency from 31.36 ms to 4.77 ms and total response latency from 35.29 ms to 15.48 ms. These correspond to reductions of 84.8\% and 56.1\%, respectively. The static-only V1/FaaSLight stage provides a useful minimum-improvement reference but can shift heavy import cost into handler execution.
+
+\vspace{0.5em}
+\textbf{Keywords:} serverless computing, cold start, dependency analysis, lazy loading, transition prediction, preloading.
+
+\clearpage
+\renewcommand*{\contentsname}{CONTENTS}
+\renewcommand*{\listfigurename}{LIST OF FIGURES}
+\renewcommand*{\listtablename}{LIST OF TABLES}
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+\pagenumbering{arabic}
+
+\chapter{INTRODUCTION}
+\section{Overview}
+Function-as-a-Service platforms create execution environments on demand. A newly created environment must initialize application code before it can serve its first request. The initialization cost is particularly visible in services that include database clients, SDKs, model wrappers, or media-processing libraries. Loading every dependency eagerly is simple, but it makes optional functionality part of the critical path.
+
+This project evaluates a progression from an eager no-optimizer baseline to the final Predictive Cold-Start Optimizer (PCSO). The comparison retains the static-only V1/FaaSLight stage as a minimum-improvement reference. The central objective is to reduce code-loading latency without moving the same cost into handler execution.
+
+\section{Motivation}
+Static dependency analysis can identify imports that are not needed for every request, but static information alone does not reveal when a deferred dependency will be needed. Runtime transition information provides that missing temporal signal. If endpoint $A$ is commonly followed by endpoint $B$, the dependencies of $B$ can be prepared while the system is processing $A$.
+
+\section{Objectives}
+\begin{enumerate}[label={(\arabic*)}]
+\item Classify dependencies into startup-critical and deferrable imports.
+\item Learn endpoint transitions using an online first-order model.
+\item Preload the predicted endpoint and its dependency closure.
+\item Compare the baseline, V1/FaaSLight, and PCSO across multiple workload profiles.
+\end{enumerate}
+
+\section{Scope and contributions}
+The work focuses on application-level initialization rather than changes to a cloud provider's scheduler or container runtime. The unit of optimization is an endpoint module and the set of local dependencies it can reach. This keeps the method portable: the same policy can be applied wherever the application controls its import boundary and has access to a warm execution environment.
+
+The main contribution is the connection between two kinds of information. Static analysis provides a dependency manifest, while runtime observation provides ordering information between endpoint invocations. V1 uses only the first source of information. PCSO combines both sources and therefore has an opportunity to move heavy initialization work out of the next request's critical path.
+
+\chapter{LITERATURE REVIEW}
+\section{Serverless cold starts}
+A serverless cold start includes environment creation, application initialization, dependency loading, and handler execution. The relative contribution of these stages varies with application size and workload. For lightweight services, dependency loading can be a substantial fraction of total latency; for heavy services, a deferred model or processing library can dominate the handler path instead.
+
+\section{FaaSLight and static deferral}
+FaaSLight describes application-level cold-start optimization through dependency analysis and selective lazy loading~\cite{faaslight}. Its key insight is that a dependency imported only on a conditional path need not be loaded before every request. This work adopts that principle as V1 and extends it with runtime transition prediction and preloading.
+
+\section{Research gap}
+Static deferral answers \textit{what} can be delayed, but not \textit{when} the delayed code will be needed. The remaining challenge is to avoid paying a large deferred import cost inside the next request. PCSO addresses this gap by combining static dependency information with a learned next-endpoint prediction.
+
+\section{Comparison of approaches}
+The three points in the evaluation have deliberately different responsibilities. The baseline establishes the cost of eager loading. V1 isolates the benefit of static analysis and lazy imports. PCSO measures the additional benefit of using sequence information to warm the next endpoint. This separation is important because a large reduction in import time does not necessarily imply a large reduction in total response time when the import cost is merely moved into the handler.
+
+\chapter{PROPOSED METHODOLOGY}
+\section{Static dependency analysis}
+The analyzer inspects the source structure of each function. Imports at module scope are classified as indispensable because they are needed to construct the handler environment. Imports inside functions or conditional branches are classified as optional candidates for deferral. The classification changes the loading schedule, not the behavior of the handler.
+
+The analysis is intentionally lexical rather than speculative. It does not attempt to infer the result of arbitrary program paths. A top-level import is therefore treated as startup-critical, while an import nested in a function or branch is eligible for deferred loading. Local application dependencies are retained in the manifest; standard-library and external dependencies are ignored by the runtime preloader when they are not part of the application workload.
+
+\section{Transition prediction}
+PCSO maintains a first-order Markov transition table. For an observed transition from endpoint $A$ to endpoint $B$, it increments $N(A,B)$. The next-endpoint probability is estimated as
 \begin{equation}
 P(B\mid A)=\frac{N(A,B)}{\sum_x N(A,x)}.
 \end{equation}
-The highest-probability endpoint is selected only when its confidence reaches the configured threshold. PCSO then warms the predicted endpoint and the local dependencies identified by the static analysis. If the confidence is low or the request differs from the prediction, execution falls back to the static-loading behavior; prediction does not change functional correctness.
+The highest-probability endpoint is selected when its confidence reaches the configured threshold. If the confidence is low, the system falls back to the static-loading behavior.
 
-\widefig{diagrams/runtime_pipeline.png}{PCSO combines a static dependency manifest with runtime prediction. The eager baseline loads the full dependency set, V1 loads only indispensable imports, and PCSO additionally warms the predicted next endpoint.}
+Before any endpoint has been invoked, the transition table is empty. The first invocation therefore has no prediction and follows the V1 loading path. After the first completed transition, the corresponding row contains one observation. As more transitions are observed, the row estimates become more stable. Ties are resolved deterministically by the predictor's ordering, and the confidence threshold prevents speculative warming when the observed evidence is weak.
 
-\widefig{diagrams/predictive_loop.png}{Runtime loop used by PCSO: record a transition, predict the next endpoint, warm its dependency closure, and reuse the resident modules on the next invocation.}
+For example, if the row for endpoint $A$ contains seven observations of $A\rightarrow B$ and three observations of $A\rightarrow C$, then $P(B\mid A)=0.70$ and $P(C\mid A)=0.30$. PCSO warms $B$ when the threshold is 0.35; it does not warm $C$ as the top prediction for that row.
 
-\section{Evaluation Methodology}
+\fullfigure{diagrams/runtime_pipeline.png}{PCSO combines a static dependency manifest with runtime prediction. The eager baseline loads the full dependency set, V1 loads only indispensable imports, and PCSO additionally warms the predicted next endpoint.}
+
+\fullfigure[0.78\textwidth]{diagrams/predictive_loop.png}{PCSO runtime loop: record a transition, predict the next endpoint, warm its dependency closure, and reuse the resident modules on the next invocation.}
+
+\section{Preloading policy}
+After each invocation, PCSO records the completed transition and predicts the next endpoint. It then warms the predicted endpoint and its local dependency closure. The background preload time is tracked separately from request latency. If the next request matches the prediction, the module is already resident; otherwise, the request follows the static-loading path without changing functional correctness.
+
+The runtime sequence is therefore: (1) load the current endpoint, (2) execute its handler, (3) update the transition table, (4) select a predicted endpoint if the confidence threshold is met, and (5) import the predicted endpoint and its indispensable and optional local dependencies into the warm set. The measured response ends after step (2); step (5) is reported as background preparation. This distinction prevents the benchmark from presenting background work as if it were part of the current request's latency.
+
+\chapter{RESULTS AND ANALYSIS}
+\section{Evaluation protocol}
 The evaluation uses four workload profiles. Tier 1 represents lightweight CRUD and utility functions. Tier 2 represents medium enterprise services with authentication, validation, and persistence logic. Tier 3 represents heavy OCR, fraud-analysis, and media-processing pipelines. The blended profile samples 50\% Tier 1, 35\% Tier 2, and 15\% Tier 3 activity.
 
-Each tiered profile contains 24 invocations and the blended profile contains 32. Fixed random seeds make the stochastic sequences repeatable. Each version is evaluated in an isolated runtime state. The reported metrics are mean import latency, mean handler latency, mean total response latency, p95 latency, resident memory, and predictive cache-hit rate. Background preloading is measured separately and is not added to the response time of the request that triggered it.
+Each tiered profile contains 24 invocations and the blended profile contains 32. Fixed random seeds make the sequences repeatable. Each version is evaluated in an isolated runtime state. The reported metrics are mean import latency, mean handler latency, mean total response latency, p95 latency, resident memory, and predictive cache-hit rate.
 
-\begin{table}[!t]
-\centering\footnotesize
+For an invocation $i$, total response latency is computed as
+\begin{equation}
+T_i=T_{\mathrm{load},i}+T_{\mathrm{handler},i}.
+\end{equation}
+The percentage reduction of an optimized version $M$ relative to the baseline is
+\begin{equation}
+R_M=100\times\frac{\overline{T}_{\mathrm{baseline}}-\overline{T}_M}
+{\overline{T}_{\mathrm{baseline}}}.
+\end{equation}
+The p95 is the latency value at the 95th percentile of the ordered invocation samples. Cache-hit rate is the fraction of invocations whose endpoint module was already present in the predicted warm set.
+
+\begin{table}[H]
+\centering\small
+\caption{Workload profiles used in the evaluation.}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Profile} & \textbf{Size} & \textbf{Dominant behavior}\\\midrule
+Tier 1 & Light & CRUD, health, configuration, and utility operations.\\
+Tier 2 & Medium & Authentication, validation, database, and enterprise service logic.\\
+Tier 3 & Heavy & OCR, fraud evaluation, model, and media-processing dependencies.\\
+Blended & Mixed & 50\% Tier 1, 35\% Tier 2, and 15\% Tier 3.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The baseline and V1 measurements isolate each invocation's application working set. PCSO follows the same cold-start isolation policy for unrelated modules but preserves the explicitly predicted working set. This is why the first PCSO call behaves like V1, while later calls can observe a cache hit.
+
+\begin{table}[H]
+\centering\small
 \caption{Compared runtime versions.}
-\label{tab:versions}
-\begin{tabularx}{\columnwidth}{@{}lX@{}}
+\begin{tabularx}{\textwidth}{@{}lX@{}}
 \toprule
 \textbf{Version} & \textbf{Policy}\\\midrule
 Baseline & Eagerly loads indispensable and optional dependencies.\\
@@ -137,15 +278,16 @@ PCSO & V1 policy plus transition prediction and dependency-closure preloading.\\
 \end{tabularx}
 \end{table}
 
-\section{Results}
-\widefig{results/latency_comparison.png}{Mean code-loading and end-to-end response latency for the eager baseline, V1/FaaSLight, and final PCSO.}
+\section{Latency comparison}
+The first pattern in Table~\ref{tab:latency} is that V1 consistently reduces code-loading time, but the total-latency effect depends on how much deferred work is exercised by the handler. PCSO reduces both terms when the transition model predicts the next endpoint successfully.
+\fullfigure{results/latency_comparison.png}{Mean code-loading and end-to-end response latency for the eager baseline, V1/FaaSLight, and final PCSO.}
+\fullfigure{results/faaslight_vs_baseline_reduction.png}{Reduction relative to the true eager baseline. PCSO extends the V1 improvement by removing shifted handler-side import cost.}
 
-\widefig{results/faaslight_vs_baseline_reduction.png}{Reduction relative to the true eager baseline. PCSO extends the V1 improvement by removing shifted handler-side import cost.}
-
-\begin{table*}[!t]
-\centering\footnotesize
+\begin{table}[H]
+\centering\small
 \caption{Mean latency comparison against the true no-optimizer baseline.}
 \label{tab:latency}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{@{}lrrr|rrr@{}}
 \toprule
 & \multicolumn{3}{c|}{Code loading (ms)} & \multicolumn{3}{c}{Total response (ms)}\\
@@ -155,29 +297,27 @@ Tier 2 & 44.32 & 24.76 & 5.37 & 49.61 & 30.02 & 10.63\\
 Tier 3 & 81.15 & 17.05 & 5.46 & 89.47 & 88.98 & 43.52\\
 Blended fleet & 31.36 & 14.45 & 4.77 & 35.29 & 25.16 & 15.48\\
 \bottomrule
-\end{tabular}
-\end{table*}
+\end{tabular}}
+\end{table}
 
-\singlefig{results/hitrate_and_memory.png}{Resident memory across the workload profiles for the three runtime versions.}
+\section{Tier 3 analysis}
+V1 reduces Tier 3 code-loading latency from 81.15 ms to 17.05 ms, but the heavy OCR, machine-learning, and media dependencies are then imported inside the handler. Consequently, total latency changes only from 89.47 ms to 88.98 ms. PCSO uses the observed transition history to warm the predicted heavy dependency closure before the request. Total Tier 3 latency therefore falls to 43.52 ms, a 51.4\% reduction relative to the baseline and a 51.1\% reduction relative to V1.
 
-\subsection{Tier 3: why PCSO gains over V1}
-The Tier 3 result exposes the difference between deferral and preloading. V1 reduces code-loading latency from 81.15 ms to 17.05 ms, but the heavy OCR, machine-learning, and media dependencies are then imported inside the handler. Consequently, total latency changes only from 89.47 ms to 88.98 ms. PCSO uses the observed transition history to warm the predicted heavy dependency closure before the request. Total Tier 3 latency therefore falls to 43.52 ms, a 51.4\% reduction relative to the baseline and a 51.1\% reduction relative to V1.
+\fullfigure[0.88\textwidth]{results/memory_and_cache.png}{Resident memory and PCSO predictive cache-hit rate across the workload profiles.}
 
+\section{Blended fleet analysis}
 For the blended fleet, V1 reduces code-loading latency by 53.9\% and total latency by 28.7\%. PCSO improves those reductions to 84.8\% and 56.1\%. The tiered sequences produce higher prediction hit rates than the deliberately mixed fleet: 79.2\% for Tier 1, 66.7\% for Tier 2, 41.7\% for Tier 3, and 12.5\% for the blended profile.
 
-\section{Discussion}
-The evaluation supports two conclusions. First, static dependency analysis is a useful and measurable baseline: it removes unnecessary startup work and gives the runtime an explicit dependency manifest. Second, static deferral alone does not guarantee a faster request. When a deferred dependency is almost certain to be used, moving its import into the handler only relocates the cost. PCSO addresses this case by using runtime sequence information to place the cost before the next request.
+\chapter{CONCLUSIONS AND FUTURE WORK}
+\section{Conclusion}
+PCSO combines static dependency analysis, transition prediction, and dependency-closure preloading. Against the true eager baseline, it reduces blended code-loading latency by 84.8\% and total response latency by 56.1\%. The three-way comparison clarifies the source of the gain: V1 removes optional imports from startup, while PCSO prevents heavy deferred imports from reappearing on the handler's critical path.
 
-The improvement is workload-dependent. Predictable sequences give PCSO more opportunities to warm the correct closure, while a mixed fleet lowers prediction confidence. This is why the blended cache-hit rate is lower even though the blended total-latency improvement remains substantial.
-
-\section{Limitations and Future Work}
+\section{Limitations and future work}
 The evaluation is a controlled application-level benchmark rather than a measurement of a particular cloud provider's network, billing, or container scheduler. The dependency weights model relative initialization cost and should not be interpreted as provider-specific timings. The predictor is first-order and online; it can be inaccurate after an abrupt workload change. Future work should evaluate production traces, add confidence decay, enforce a memory budget, and move preloading to an asynchronous worker with explicit resource limits.
 
-\section{Conclusion}
-PCSO combines static dependency analysis, transition prediction, and dependency-closure preloading. Against the true eager baseline, it reduces blended code-loading latency by 84.8\% and total response latency by 56.1\%. The three-way comparison also clarifies the source of the gain: V1 removes optional imports from startup, while PCSO prevents heavy deferred imports from reappearing on the handler's critical path.
-
-\balance
-\begin{thebibliography}{00}
+\renewcommand{\bibname}{REFERENCES}
+\addcontentsline{toc}{chapter}{REFERENCES}
+\begin{thebibliography}{99}
 \bibitem{faaslight} Y. Liu \textit{et al.}, ``FaaSLight: General Application-Level Cold-Start Latency Optimization for Function-as-a-Service,'' arXiv:2207.08175, 2023.
 \bibitem{aws} Amazon Web Services, ``Understanding AWS Lambda scaling and cold starts,'' AWS documentation.
 \end{thebibliography}
